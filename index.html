@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MTC Online 師資班 - 詞彙教學互動課程</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Noto+Sans+TC:wght@400;700;900&display=swap"
+        rel="stylesheet">
     <style>
         body {
             font-family: 'Noto Sans TC', sans-serif;
@@ -48,8 +50,15 @@
 
         /* Animated gradient text */
         @keyframes gradient-shift {
-            0%, 100% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
+
+            0%,
+            100% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
         }
 
         .gradient-text {
@@ -63,8 +72,15 @@
 
         /* Badge pulse animation */
         @keyframes pulse-badge {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
         }
 
         .badge-pulse {
@@ -72,20 +88,22 @@
         }
     </style>
 </head>
+
 <body class="pop-dots">
-    
+
     <!-- Main Container -->
     <div class="min-h-screen py-8 px-4">
-        
+
         <!-- Header Section -->
         <header class="max-w-6xl mx-auto mb-12 text-center">
             <!-- Main Title -->
             <div class="inline-block bg-white pop-border pop-shadow px-8 py-6 transform -rotate-1 mb-6">
-                <h1 class="font-bangers text-4xl md:text-6xl text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-yellow-500 to-blue-500 mb-2">
-                    MTC ONLINE
+                <h1
+                    class="font-bangers text-4xl md:text-6xl text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-yellow-500 to-blue-500 mb-2">
+                    華語詞彙教學
                 </h1>
                 <h2 class="text-2xl md:text-3xl font-bold text-gray-800">
-                    第47期師資班 - 詞彙教學
+                    MTC Online 第47期師資班
                 </h2>
             </div>
 
@@ -100,11 +118,13 @@
         <!-- Lessons Grid -->
         <main class="max-w-7xl mx-auto">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                
+
                 <!-- Lesson 1: VARK Learning Style -->
-                <a href="pages/lesson1.html" class="lesson-card bg-white pop-border pop-shadow rounded-xl overflow-hidden group">
+                <a href="pages/lesson1.html"
+                    class="lesson-card bg-white pop-border pop-shadow rounded-xl overflow-hidden group">
                     <div class="bg-blue-400 p-4 border-b-4 border-black relative">
-                        <div class="absolute top-2 right-2 bg-red-500 text-white px-3 py-1 pop-border text-sm font-bold transform rotate-12 badge-pulse">
+                        <div
+                            class="absolute top-2 right-2 bg-red-500 text-white px-3 py-1 pop-border text-sm font-bold transform rotate-12 badge-pulse">
                             測驗
                         </div>
                         <h3 class="font-bangers text-3xl text-white drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]">
@@ -130,9 +150,11 @@
                 </a>
 
                 <!-- Lesson 2: Idiom Card Game -->
-                <a href="pages/lesson2.html" class="lesson-card bg-white pop-border pop-shadow rounded-xl overflow-hidden group">
+                <a href="pages/lesson2.html"
+                    class="lesson-card bg-white pop-border pop-shadow rounded-xl overflow-hidden group">
                     <div class="bg-red-500 p-4 border-b-4 border-black relative">
-                        <div class="absolute top-2 right-2 bg-yellow-400 text-black px-3 py-1 pop-border text-sm font-bold transform rotate-12 badge-pulse">
+                        <div
+                            class="absolute top-2 right-2 bg-yellow-400 text-black px-3 py-1 pop-border text-sm font-bold transform rotate-12 badge-pulse">
                             多人
                         </div>
                         <h3 class="font-bangers text-3xl text-white drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]">
@@ -158,9 +180,11 @@
                 </a>
 
                 <!-- Lesson 3: Flashcards -->
-                <a href="pages/lesson3.html" class="lesson-card bg-white pop-border pop-shadow rounded-xl overflow-hidden group">
+                <a href="pages/lesson3.html"
+                    class="lesson-card bg-white pop-border pop-shadow rounded-xl overflow-hidden group">
                     <div class="bg-yellow-400 p-4 border-b-4 border-black relative">
-                        <div class="absolute top-2 right-2 bg-purple-500 text-white px-3 py-1 pop-border text-sm font-bold transform rotate-12 badge-pulse">
+                        <div
+                            class="absolute top-2 right-2 bg-purple-500 text-white px-3 py-1 pop-border text-sm font-bold transform rotate-12 badge-pulse">
                             練習
                         </div>
                         <h3 class="font-bangers text-3xl text-white drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]">
@@ -186,9 +210,11 @@
                 </a>
 
                 <!-- Lesson 4: Group Classification -->
-                <a href="pages/lesson4.html" class="lesson-card bg-white pop-border pop-shadow rounded-xl overflow-hidden group">
+                <a href="pages/lesson4.html"
+                    class="lesson-card bg-white pop-border pop-shadow rounded-xl overflow-hidden group">
                     <div class="bg-teal-400 p-4 border-b-4 border-black relative">
-                        <div class="absolute top-2 right-2 bg-orange-500 text-white px-3 py-1 pop-border text-sm font-bold transform rotate-12 badge-pulse">
+                        <div
+                            class="absolute top-2 right-2 bg-orange-500 text-white px-3 py-1 pop-border text-sm font-bold transform rotate-12 badge-pulse">
                             協作
                         </div>
                         <h3 class="font-bangers text-3xl text-white drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]">
@@ -214,9 +240,11 @@
                 </a>
 
                 <!-- Lesson 5: Synonym Challenge -->
-                <a href="pages/lesson5.html" class="lesson-card bg-white pop-border pop-shadow rounded-xl overflow-hidden group">
+                <a href="pages/lesson5.html"
+                    class="lesson-card bg-white pop-border pop-shadow rounded-xl overflow-hidden group">
                     <div class="bg-pink-500 p-4 border-b-4 border-black relative">
-                        <div class="absolute top-2 right-2 bg-green-400 text-black px-3 py-1 pop-border text-sm font-bold transform rotate-12 badge-pulse">
+                        <div
+                            class="absolute top-2 right-2 bg-green-400 text-black px-3 py-1 pop-border text-sm font-bold transform rotate-12 badge-pulse">
                             挑戰
                         </div>
                         <h3 class="font-bangers text-3xl text-white drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]">
@@ -242,9 +270,11 @@
                 </a>
 
                 <!-- Lesson 6: Final Quiz -->
-                <a href="pages/lesson6.html" class="lesson-card bg-white pop-border pop-shadow rounded-xl overflow-hidden group">
+                <a href="pages/lesson6.html"
+                    class="lesson-card bg-white pop-border pop-shadow rounded-xl overflow-hidden group">
                     <div class="bg-green-500 p-4 border-b-4 border-black relative">
-                        <div class="absolute top-2 right-2 bg-blue-500 text-white px-3 py-1 pop-border text-sm font-bold transform rotate-12 badge-pulse">
+                        <div
+                            class="absolute top-2 right-2 bg-blue-500 text-white px-3 py-1 pop-border text-sm font-bold transform rotate-12 badge-pulse">
                             總結
                         </div>
                         <h3 class="font-bangers text-3xl text-white drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]">
@@ -287,9 +317,14 @@
     </div>
 
     <!-- Decorative Elements -->
-    <div class="fixed top-10 left-10 w-20 h-20 bg-yellow-400 rounded-full pop-border opacity-50 animate-bounce hidden lg:block" style="animation-delay: 0.5s;"></div>
-    <div class="fixed bottom-20 right-20 w-16 h-16 bg-pink-500 pop-border transform rotate-45 opacity-50 animate-pulse hidden lg:block"></div>
-    <div class="fixed top-1/2 right-10 w-12 h-12 bg-blue-400 pop-border opacity-50 animate-spin hidden lg:block" style="animation-duration: 8s;"></div>
+    <div class="fixed top-10 left-10 w-20 h-20 bg-yellow-400 rounded-full pop-border opacity-50 animate-bounce hidden lg:block"
+        style="animation-delay: 0.5s;"></div>
+    <div
+        class="fixed bottom-20 right-20 w-16 h-16 bg-pink-500 pop-border transform rotate-45 opacity-50 animate-pulse hidden lg:block">
+    </div>
+    <div class="fixed top-1/2 right-10 w-12 h-12 bg-blue-400 pop-border opacity-50 animate-spin hidden lg:block"
+        style="animation-duration: 8s;"></div>
 
 </body>
+
 </html>

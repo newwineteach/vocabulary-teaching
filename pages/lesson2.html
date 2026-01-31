@@ -82,19 +82,8 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        // --- Configuration ---
-        const { useState, useEffect, useRef, useMemo } = React;
-
-        // Firebase Configuration (Environment Variables)
-        const firebaseConfig = JSON.parse(window.__firebase_config || '{}');
-        const appId = window.__app_id || 'default-app';
-
-        // Initialize Firebase
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
-        const auth = firebase.auth();
-        const db = firebase.firestore();
+        // --- Pure Frontend Version (No Firebase) ---
+        const { useState, useEffect } = React;
 
         // Game Constants
         const TEAMS = [
@@ -112,8 +101,6 @@
             "旗開得勝"
         ];
 
-        const COLLECTION_NAME = 'game_cards';
-
         // Helper to calculate positions based on layout mode
         const getCardTargetPosition = (team, index, isExpanded) => {
             const baseX = team.isRight ? 85 : 5;
@@ -122,12 +109,8 @@
             const yDir = team.isBottom ? -1 : 1;
 
             if (isExpanded) {
-                // Expanded: 2x2 Grid (or similar readable layout)
-                // Use larger offsets to separate cards
                 const col = index % 2;
                 const row = Math.floor(index / 2);
-
-                // Percentages for spacing
                 const xSpacing = 12;
                 const ySpacing = 16;
 
@@ -136,7 +119,6 @@
                     y: baseY + (row * ySpacing * yDir)
                 };
             } else {
-                // Collapsed: Tight Stack/Fan
                 const xSpacing = 2;
                 const ySpacing = 2;
 
@@ -148,132 +130,73 @@
         };
 
         function App() {
-            const [user, setUser] = useState(null);
             const [cards, setCards] = useState([]);
             const [draggingId, setDraggingId] = useState(null);
             const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-            const [isExpanded, setIsExpanded] = useState(false); // Local UI state for toggle button text
-            const [status, setStatus] = useState("連線中...");
+            const [isExpanded, setIsExpanded] = useState(true);
 
-            // --- Authentication ---
-            useEffect(() => {
-                const initAuth = async () => {
-                    try {
-                        if (window.__initial_auth_token) {
-                            await auth.signInWithCustomToken(window.__initial_auth_token);
-                        } else {
-                            await auth.signInAnonymously();
-                        }
-                    } catch (error) {
-                        console.error("Auth error:", error);
-                        setStatus("連線錯誤");
-                    }
-                };
-                initAuth();
-                return auth.onAuthStateChanged((u) => {
-                    setUser(u);
-                    if (u) setStatus("準備就緒");
-                });
-            }, []);
-
-            // --- Firestore Sync ---
-            useEffect(() => {
-                if (!user) return;
-
-                // Listen to public game data
-                const q = db.collection('artifacts').doc(appId).collection('public').doc('data').collection(COLLECTION_NAME);
-
-                const unsubscribe = q.onSnapshot((snapshot) => {
-                    const loadedCards = [];
-                    snapshot.forEach(doc => {
-                        loadedCards.push({ id: doc.id, ...doc.data() });
-                    });
-                    setCards(loadedCards);
-                }, (error) => {
-                    console.error("Data sync error:", error);
-                });
-
-                return () => unsubscribe();
-            }, [user]);
-
-            // --- Game Actions ---
-
-            const initializeGame = async () => {
-                if (!user) return;
-
-                const batch = db.batch();
-                const collectionRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection(COLLECTION_NAME);
-
-                // 1. Delete existing
-                cards.forEach(card => {
-                    batch.delete(collectionRef.doc(card.id));
-                });
-
-                // 2. Create new cards
-                // Default to Collapsed (Stacked) initially, or Expanded if preferred. 
-                // Let's default to Expanded so they are visible for the race!
-                const initialExpandedState = true;
-                setIsExpanded(initialExpandedState);
+            // Initialize Game
+            const initializeGame = () => {
+                const newCards = [];
+                let cardId = 0;
 
                 TEAMS.forEach((team) => {
                     IDIOMS.forEach((idiom, index) => {
-                        const docRef = collectionRef.doc();
-                        const pos = getCardTargetPosition(team, index, initialExpandedState);
-
-                        batch.set(docRef, {
+                        const pos = getCardTargetPosition(team, index, true);
+                        newCards.push({
+                            id: `card-${cardId++}`,
                             text: idiom,
                             teamId: team.id,
                             x: pos.x,
                             y: pos.y,
-                            originalIndex: index, // Keep track for layout calculations
+                            originalIndex: index,
                             zIndex: index,
                             isDragging: false,
-                            inZone: false,
-                            lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                            inZone: false
                         });
                     });
                 });
 
-                await batch.commit();
+                setCards(newCards);
+                setIsExpanded(true);
             };
 
-            const toggleLayout = async () => {
-                if (!user) return;
+            // Toggle Layout
+            const toggleLayout = () => {
                 const newExpandedState = !isExpanded;
                 setIsExpanded(newExpandedState);
 
-                const batch = db.batch();
-                const collectionRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection(COLLECTION_NAME);
-
-                // Update all cards that are NOT in the drop zone
-                cards.forEach(card => {
+                setCards(prevCards => prevCards.map(card => {
                     if (!card.inZone && !card.isDragging) {
                         const team = TEAMS.find(t => t.id === card.teamId);
                         if (team) {
                             const pos = getCardTargetPosition(team, card.originalIndex, newExpandedState);
-                            batch.update(collectionRef.doc(card.id), {
-                                x: pos.x,
-                                y: pos.y
-                            });
+                            return { ...card, x: pos.x, y: pos.y };
                         }
                     }
-                });
-                await batch.commit();
+                    return card;
+                }));
             };
 
-            const updateCardPosition = async (id, x, y, isDragging) => {
+            // Update Card Position
+            const updateCardPosition = (id, x, y, isDragging) => {
                 const isInZone = (x > 30 && x < 70 && y > 30 && y < 70);
 
-                await db.collection('artifacts').doc(appId).collection('public').doc('data').collection(COLLECTION_NAME).doc(id).update({
-                    x,
-                    y,
-                    isDragging,
-                    zIndex: isDragging ? 100 : (isInZone ? 50 : 1),
-                    inZone: isInZone
-                });
+                setCards(prevCards => prevCards.map(card =>
+                    card.id === id
+                        ? {
+                            ...card,
+                            x,
+                            y,
+                            isDragging,
+                            zIndex: isDragging ? 100 : (isInZone ? 50 : card.originalIndex),
+                            inZone: isInZone
+                        }
+                        : card
+                ));
             };
 
-            // --- Interaction Handlers ---
+            // Pointer Handlers
             const handlePointerDown = (e, card) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -301,7 +224,6 @@
                 let newX = ((e.clientX / screenW) * 100) - dragOffset.x;
                 let newY = ((e.clientY / screenH) * 100) - dragOffset.y;
 
-                // Boundaries
                 newX = Math.max(-5, Math.min(newX, 90));
                 newY = Math.max(-5, Math.min(newY, 95));
 
@@ -310,11 +232,11 @@
                 ));
             };
 
-            const handlePointerUp = async (e) => {
+            const handlePointerUp = (e) => {
                 if (!draggingId) return;
                 const card = cards.find(c => c.id === draggingId);
                 if (card) {
-                    await updateCardPosition(card.id, card.x, card.y, false);
+                    updateCardPosition(card.id, card.x, card.y, false);
                 }
                 setDraggingId(null);
             };
@@ -328,10 +250,8 @@
                 };
             }, [draggingId, cards]);
 
-
             return (
                 <div className="relative w-full h-screen overflow-hidden select-none bg-slate-50">
-
                     {/* Background Structure */}
                     <div className="absolute inset-0 pointer-events-none">
                         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2/3 h-1/3 drop-zone rounded-3xl flex items-center justify-center opacity-30">
@@ -403,7 +323,7 @@
                                 <div className={`w-full h-4 ${team ? team.color : 'bg-gray-100'} rounded-t-lg mb-auto`}></div>
 
                                 <div className="flex-1 flex items-center justify-center p-2 text-center pointer-events-none">
-                                    <span className="text-2xl font-bold text-gray-800 vertical-rl writing-mode-vertical">
+                                    <span className="text-2xl font-bold text-gray-800">
                                         {card.text}
                                     </span>
                                 </div>
