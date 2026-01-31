@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>各級學習需求與表現 - 分類遊戲</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Bangers&family=Noto+Sans+TC:wght@500;700;900&display=swap');
+
+        .font-bangers {
+            font-family: 'Bangers', cursive;
+            letter-spacing: 1px;
+        }
+
+        .font-noto {
+            font-family: 'Noto Sans TC', sans-serif;
+        }
+
+        .pop-shadow {
+            box-shadow: 6px 6px 0px 0px rgba(0, 0, 0, 1);
+        }
+
+        .pop-border {
+            border: 3px solid #000;
+        }
+
+        .pop-card:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 8px 8px 0px 0px rgba(0, 0, 0, 1);
+        }
+
+        /* Back button */
+        .back-button {
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 100;
+            background: white;
+            border: 3px solid black;
+            padding: 0.5rem 1rem;
+            font-weight: bold;
+            box-shadow: 4px 4px 0 0 black;
+            transition: all 0.2s;
+        }
+
+        .back-button:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0 0 black;
+            background: #FEF08A;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 返回主頁按鈕 -->
+    <a href="../index.html" class="back-button">
+        <span class="text-xl">←</span>
+        <span class="hidden md:inline ml-2">返回主頁</span>
+    </a>
+
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useMemo } = React;
+
+        const INITIAL_CARDS = [
+            // 初級
+            { id: 'c1', text: "基礎高頻詞、日常詞彙", zones: [1] },
+            { id: 'c2', text: "具體", zones: [1] },
+            { id: 'c3', text: "基本生存溝通詞彙（問候、購物等）", zones: [1] },
+            { id: 'c4', text: "容易混淆發音相似的詞", zones: [1] },
+
+            // 中級
+            { id: 'c6', text: "學習抽象詞彙", zones: [2] },
+            { id: 'c7', text: "詞語搭配", zones: [2] },
+            { id: 'c8', text: "語法與詞彙的整合學習", zones: [2] },
+            { id: 'c9', text: "知道詞意，但不確定如何搭配", zones: [2] },
+            { id: 'c10', text: "詞彙遺忘率高，難以記住", zones: [2] },
+
+            // 高級
+            { id: 'c11', text: "專業與正式詞彙", zones: [3] },
+            { id: 'c12', text: "能夠進行細微語意區別", zones: [3] },
+            { id: 'c13', text: "批判性思考與詞彙表達能力", zones: [3] },
+            { id: 'c14', text: "正式 vs. 非正式詞彙混用", zones: [2, 3] },
+            { id: 'c15', text: "寫作或表達欠缺詞彙層次感", zones: [3] },
+        ];
+
+        const PopArtSorter = () => {
+            const [cards, setCards] = useState(() =>
+                INITIAL_CARDS.map(card => ({ ...card, currentZone: 0 }))
+            );
+            const [draggedCardId, setDraggedCardId] = useState(null);
+            const [selectedCardId, setSelectedCardId] = useState(null);
+
+            const initializeGame = () => {
+                setCards(INITIAL_CARDS.map(card => ({ ...card, currentZone: 0 })));
+                setSelectedCardId(null);
+            };
+
+            const moveCard = (cardId, targetZone) => {
+                setCards(prev => prev.map(c =>
+                    c.id === cardId ? { ...c, currentZone: targetZone } : c
+                ));
+            };
+
+            const handleDragStart = (e, cardId) => {
+                setDraggedCardId(cardId);
+                e.dataTransfer.setData("cardId", cardId);
+            };
+
+            const handleDragOver = (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = "move";
+            };
+
+            const handleDrop = (e, targetZone) => {
+                e.preventDefault();
+                const cardId = e.dataTransfer.getData("cardId");
+                if (cardId) moveCard(cardId, targetZone);
+                setDraggedCardId(null);
+            };
+
+            const handleCardClick = (cardId) => {
+                setSelectedCardId(prev => prev === cardId ? null : cardId);
+            };
+
+            const handleZoneClick = (targetZone) => {
+                if (selectedCardId) {
+                    moveCard(selectedCardId, targetZone);
+                    setSelectedCardId(null);
+                }
+            };
+
+            const getCardsByZone = (zone) => cards.filter(c => c.currentZone === zone);
+            const sortedCards = cards.filter(c => c.currentZone !== 0).length;
+            const progress = Math.round((sortedCards / INITIAL_CARDS.length) * 100);
+
+            const Card = ({ card, isDragging, isSelected }) => {
+                const isCorrect = card.currentZone !== 0 && card.zones.includes(card.currentZone);
+                const isWrong = card.currentZone !== 0 && !card.zones.includes(card.currentZone);
+
+                return (
+                    <div
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, card.id)}
+                        onClick={(e) => { e.stopPropagation(); handleCardClick(card.id); }}
+                        className={`
+                  relative bg-white border-2 border-black p-3 w-full md:max-w-[200px] cursor-grab active:cursor-grabbing
+                  transition-all duration-200 select-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]
+                  ${isDragging ? 'opacity-50 scale-95' : 'opacity-100'}
+                  ${isSelected ? 'bg-pink-100 -translate-y-2 shadow-[8px_8px_0px_0px_rgba(236,72,153,1)] ring-2 ring-pink-500 z-50' : 'hover:-translate-y-1'}
+                  ${isWrong ? 'border-red-500 bg-red-50' : ''} 
+                  ${isCorrect ? 'border-green-500 bg-green-50' : ''}
+                `}
+                    >
+                        {isCorrect && <span className="absolute -top-2 -right-2 w-5 h-5 bg-green-500 text-white rounded-full flex items-center justify-center text-xs">✓</span>}
+                        {isWrong && <span className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-xs">✗</span>}
+                        <p className="font-noto font-bold text-sm md:text-base leading-tight text-gray-800">{card.text}</p>
+                    </div>
+                );
+            };
+
+            const DropZone = ({ zoneId, cards, title, color, textColor }) => {
+                const isTarget = !!selectedCardId;
+
+                return (
+                    <div
+                        onDragOver={handleDragOver}
+                        onDrop={(e) => handleDrop(e, zoneId)}
+                        onClick={() => handleZoneClick(zoneId)}
+                        className={`relative flex flex-col h-full rounded-lg border-4 transition-all duration-200 overflow-hidden ${color} ${isTarget ? 'ring-4 ring-pink-400 ring-opacity-50 cursor-pointer hover:bg-white/50' : ''}`}
+                    >
+                        <div className={`p-3 border-b-4 border-black/10 flex justify-between items-center ${isTarget ? 'animate-pulse' : ''}`}>
+                            <h2 className={`font-bangers text-xl md:text-2xl ${textColor}`}>{title}</h2>
+                            <span className="bg-black/10 px-2 py-1 rounded text-xs font-bold font-noto text-gray-700">{cards.length}</span>
+                        </div>
+                        <div className="flex-1 p-3 overflow-y-auto space-y-3">
+                            {cards.length === 0 && (
+                                <div className="h-full flex flex-col items-center justify-center opacity-20 pointer-events-none">
+                                    <svg className="w-12 h-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" /></svg>
+                                    <span className="font-bangers text-xl">DROP HERE</span>
+                                </div>
+                            )}
+                            {cards.map(c => <Card key={c.id} card={c} isDragging={draggedCardId === c.id} isSelected={selectedCardId === c.id} />)}
+                        </div>
+                    </div>
+                );
+            };
+
+            return (
+                <div className="min-h-screen bg-yellow-50 font-sans flex flex-col relative overflow-hidden">
+                    {/* Pop art background */}
+                    <div className="absolute inset-0 opacity-5 pointer-events-none" style={{
+                        backgroundImage: 'radial-gradient(circle, #000 2px, transparent 2.5px)',
+                        backgroundSize: '20px 20px'
+                    }}></div>
+
+                    {/* Header */}
+                    <header className="pop-border border-x-0 border-t-0 p-4 shadow-sm bg-white relative z-10">
+                        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4" style={{ marginLeft: '80px' }}>
+                            <div className="flex items-center gap-4 w-full md:w-auto">
+                                <div className="flex flex-col">
+                                    <h1 className="text-2xl font-bangers leading-none">VOCABULARY SORTER</h1>
+                                    <p className="text-xs font-bold text-gray-500 font-noto">
+                                        {sortedCards}/{INITIAL_CARDS.length} 完成
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-4 w-full md:w-auto">
+                                <div className="flex-1 md:w-48 h-4 bg-gray-200 pop-border rounded-full overflow-hidden relative">
+                                    <div
+                                        className="absolute top-0 left-0 h-full transition-all duration-500 bg-blue-500"
+                                        style={{ width: `${progress}%` }}
+                                    ></div>
+                                </div>
+                                <button
+                                    onClick={initializeGame}
+                                    className="flex items-center gap-2 px-3 py-2 bg-white hover:bg-gray-100 pop-border rounded active:translate-y-1 active:shadow-none transition-all"
+                                >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                                    <span className="font-bangers text-sm hidden md:inline">RESET</span>
+                                </button>
+                            </div>
+                        </div>
+                    </header>
+
+                    {/* Main Content */}
+                    <main className="flex-1 overflow-hidden flex flex-col p-2 md:p-6 gap-4 max-w-7xl mx-auto w-full">
+                        {/* Pool */}
+                        <div
+                            className={`flex-shrink-0 min-h-[140px] bg-white pop-border p-4 rounded-lg relative transition-colors ${selectedCardId && getCardsByZone(0).find(c => c.id === selectedCardId) ? 'ring-4 ring-pink-400 ring-offset-2' : ''}`}
+                            onDragOver={handleDragOver}
+                            onDrop={(e) => handleDrop(e, 0)}
+                            onClick={() => handleZoneClick(0)}
+                        >
+                            <div className="absolute -top-3 left-4 bg-black text-white font-bangers px-3 py-1 rotate-1 text-lg z-10">UNSORTED POOL</div>
+                            <div className="flex flex-wrap gap-3 mt-2 justify-center md:justify-start overflow-y-auto max-h-[180px]">
+                                {getCardsByZone(0).length === 0 ? (
+                                    <div className="w-full text-center py-8 font-bangers text-gray-300 text-3xl">EMPTY!</div>
+                                ) : (
+                                    getCardsByZone(0).map(c => <Card key={c.id} card={c} isDragging={draggedCardId === c.id} isSelected={selectedCardId === c.id} />)
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Drop Zones */}
+                        <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4 min-h-0">
+                            <DropZone
+                                zoneId={1}
+                                cards={getCardsByZone(1)}
+                                title="初級 (LEVEL 1)"
+                                color="bg-blue-100 border-blue-500"
+                                textColor="text-blue-600"
+                            />
+                            <DropZone
+                                zoneId={2}
+                                cards={getCardsByZone(2)}
+                                title="中級 (LEVEL 2)"
+                                color="bg-yellow-100 border-yellow-500"
+                                textColor="text-yellow-700"
+                            />
+                            <DropZone
+                                zoneId={3}
+                                cards={getCardsByZone(3)}
+                                title="高級 (LEVEL 3)"
+                                color="bg-teal-100 border-teal-500"
+                                textColor="text-teal-700"
+                            />
+                        </div>
+                    </main>
+
+                    <div className="text-center pb-2 text-xs font-bold text-gray-400 font-noto">💡 提示：拖曳或點擊卡片，然後點擊目標區域</div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<PopArtSorter />);
+    </script>
+</body>
+
+</html>

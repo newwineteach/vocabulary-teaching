@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>普普風測驗：VARK學習風格測試</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Noto+Sans+TC:wght@500;700;900&display=swap"
+        rel="stylesheet">
+    <style>
+        /* 自定義普普藝術風格設定 */
+        :root {
+            --pop-yellow: #FFF200;
+            --pop-red: #ED1C24;
+            --pop-blue: #00AEEF;
+            --pop-black: #000000;
+        }
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: var(--pop-blue);
+            background-image: radial-gradient(var(--pop-black) 20%, transparent 20%),
+                radial-gradient(var(--pop-black) 20%, transparent 20%);
+            background-color: #ffffff;
+            background-position: 0 0, 10px 10px;
+            background-size: 20px 20px;
+            overflow: hidden;
+        }
+
+        .comic-font {
+            font-family: 'Bangers', 'Noto Sans TC', cursive;
+            letter-spacing: 1px;
+        }
+
+        /* 漫畫對話框裝飾 */
+        .speech-bubble {
+            position: relative;
+            background: #fff;
+            border: 4px solid #000;
+            padding: 10px 20px;
+            box-shadow: 8px 8px 0 #000;
+            font-weight: 900;
+        }
+
+        /* 選項按鈕樣式 */
+        .option-btn {
+            background-color: white;
+            border: 4px solid black;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            width: 100%;
+            text-align: left;
+            font-weight: bold;
+            font-size: 1.1rem;
+            box-shadow: 6px 6px 0px black;
+            transition: all 0.1s;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option-btn:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 8px 8px 0px black;
+            background-color: var(--pop-yellow);
+        }
+
+        .option-btn:active {
+            transform: translate(4px, 4px);
+            box-shadow: 2px 2px 0px black;
+            background-color: var(--pop-red);
+            color: white;
+        }
+
+        /* 題目卡片容器 */
+        .quiz-card {
+            background: white;
+            border: 6px solid black;
+            padding: 2rem;
+            box-shadow: 12px 12px 0px black;
+            max-width: 600px;
+            width: 90%;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* 進度條 */
+        .progress-bar-container {
+            width: 100%;
+            height: 20px;
+            border: 3px solid black;
+            background: white;
+            margin-top: 1rem;
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: var(--pop-red);
+            width: 0%;
+            transition: width 0.3s ease;
+            border-right: 3px solid black;
+        }
+
+        /* 結果頁特效 */
+        .result-burst {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            width: 200vw;
+            height: 200vw;
+            background: radial-gradient(circle, var(--pop-yellow) 20%, var(--pop-red) 80%);
+            z-index: 5;
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+        }
+
+        .show-burst {
+            transform: translate(-50%, -50%) scale(1) rotate(180deg);
+        }
+
+        /* 彩虹動畫特效 (音樂) */
+        @keyframes rainbow-border {
+            0% {
+                border-color: red;
+                box-shadow: 0 0 10px red;
+            }
+
+            15% {
+                border-color: orange;
+                box-shadow: 0 0 10px orange;
+            }
+
+            30% {
+                border-color: yellow;
+                box-shadow: 0 0 10px yellow;
+            }
+
+            45% {
+                border-color: green;
+                box-shadow: 0 0 10px green;
+            }
+
+            60% {
+                border-color: blue;
+                box-shadow: 0 0 10px blue;
+            }
+
+            75% {
+                border-color: indigo;
+                box-shadow: 0 0 10px indigo;
+            }
+
+            90% {
+                border-color: violet;
+                box-shadow: 0 0 10px violet;
+            }
+
+            100% {
+                border-color: red;
+                box-shadow: 0 0 10px red;
+            }
+        }
+
+        .rainbow-active {
+            animation: rainbow-border 2s linear infinite;
+            border-width: 4px;
+            border-style: solid;
+        }
+
+        /* 開始遮罩 */
+        #startOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        /* 切換動畫 */
+        .fade-out {
+            opacity: 0;
+            transform: scale(0.9);
+            transition: all 0.3s;
+        }
+
+        .fade-in {
+            opacity: 1;
+            transform: scale(1);
+            transition: all 0.3s;
+        }
+    </style>
+</head>
+
+<body class="h-screen w-screen flex flex-col items-center justify-center p-4">
+
+    <!-- 點擊開始遮罩 -->
+    <div id="startOverlay">
+        <h1 class="text-white text-5xl comic-font mb-4 text-center">你的大腦喜歡怎麼學？</h1>
+        <button onclick="startApp()"
+            class="comic-font text-4xl bg-yellow-400 text-black border-8 border-black p-6 hover:scale-110 transition-transform shadow-[10px_10px_0px_white]">
+            START TEST!
+        </button>
+        <p class="text-white mt-8 font-bold">開啟音效以獲得最佳體驗</p>
+    </div>
+
+    <!-- 背景裝飾 -->
+    <div
+        class="fixed top-[-50px] right-[-50px] w-64 h-64 bg-blue-400 rounded-full border-4 border-black z-0 opacity-50">
+    </div>
+    <div class="fixed bottom-10 left-10 w-32 h-32 bg-red-500 clip-polygon z-0"
+        style="clip-path: polygon(50% 0%, 0% 100%, 100% 100%);"></div>
+
+    <!-- 結果頁爆炸特效背景 -->
+    <div id="resultBurst" class="result-burst"></div>
+
+    <!-- 返回主頁按鈕 (左上角) -->
+    <a href="../index.html"
+        class="fixed top-4 left-4 z-50 bg-white hover:bg-yellow-400 text-black font-bold px-4 py-2 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-1 hover:translate-y-1 transition-all rounded flex items-center gap-2">
+        <span class="text-xl">←</span>
+        <span class="hidden md:inline">返回主頁</span>
+    </a>
+
+    <!-- 音樂播放器 (右上角) -->
+    <div class="fixed top-4 right-4 z-50 flex flex-col items-end gap-1">
+        <div id="audioStatus" class="bg-black text-white text-xs px-2 py-1 font-bold">等待啟動...</div>
+        <div class="flex items-center gap-2">
+            <button id="musicToggle"
+                class="w-12 h-12 bg-white rounded-full flex items-center justify-center transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] border-4 border-black">
+                <span id="musicIcon" class="text-2xl">🎵</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- 標題區 (測驗進行時顯示) -->
+    <div id="headerArea" class="mb-6 text-center relative z-10">
+        <div class="speech-bubble inline-block bg-white transform -rotate-2">
+            <h1 class="text-3xl md:text-5xl comic-font text-black tracking-wider">
+                STYLE <span class="text-red-600">TEST</span>
+            </h1>
+        </div>
+    </div>
+
+    <!-- 測驗區域 -->
+    <div id="quizContainer" class="quiz-card hidden">
+        <div class="flex justify-between items-center mb-4">
+            <span class="font-black text-xl bg-black text-white px-2 py-1 transform -skew-x-12">Question <span
+                    id="qIndex">1</span></span>
+        </div>
+
+        <h2 id="questionText" class="text-2xl font-bold mb-6 leading-relaxed">
+            題目載入中...
+        </h2>
+
+        <div id="optionsContainer" class="flex flex-col gap-2">
+            <!-- 選項按鈕會由 JS 生成 -->
+        </div>
+
+        <div class="progress-bar-container">
+            <div id="progressBar" class="progress-bar"></div>
+        </div>
+    </div>
+
+    <!-- 結果區域 -->
+    <div id="resultContainer" class="relative z-20 text-center hidden max-w-2xl">
+        <div class="bg-white border-8 border-black p-8 shadow-[15px_15px_0px_black] transform rotate-1">
+            <h2 class="text-2xl font-bold mb-2">你的學習風格是...</h2>
+            <h1 id="resultTitle"
+                class="text-5xl md:text-7xl comic-font text-red-600 mb-4 drop-shadow-[2px_2px_0px_black]">
+                VISUAL
+            </h1>
+            <div id="resultDesc" class="text-xl font-bold bg-yellow-100 p-4 border-2 border-black text-left">
+                分析結果說明...
+            </div>
+
+            <button onclick="location.reload()"
+                class="mt-8 bg-black text-white text-xl font-bold py-3 px-8 hover:bg-gray-800 border-2 border-white shadow-[4px_4px_0px_gray]">
+                再來一次 (RETRY)
+            </button>
+        </div>
+    </div>
+
+    <!-- 音訊資源 -->
+    <audio id="bgMusic" loop preload="auto">
+        <source
+            src="https://raw.githubusercontent.com/hongruhuang29-arch/music-mp3/main/River%20of%20Tomorrows%20(Cover).mp3"
+            type="audio/mpeg">
+    </audio>
+
+    <script>
+        // VARK 學習風格題庫 (V=Visual, A=Aural, R=Read/Write, K=Kinesthetic)
+        const quizData = [
+            {
+                question: "當你拿到一支功能複雜的新手機時，你會怎麼做？",
+                options: [
+                    { text: "看著圖示或照片來摸索功能", type: "V" },
+                    { text: "聽朋友介紹或是找教學影片聽解說", type: "A" },
+                    { text: "閱讀使用手冊或網路上的文字說明", type: "R" },
+                    { text: "直接按按看，試錯中學習", type: "K" }
+                ]
+            },
+            {
+                question: "你迷路了，這時你會傾向？",
+                options: [
+                    { text: "看地圖 (Google Maps 的畫面)", type: "V" },
+                    { text: "問路人，聽他們的指示", type: "A" },
+                    { text: "看路標或門牌上的文字", type: "R" },
+                    { text: "憑直覺走走看，或找地標", type: "K" }
+                ]
+            },
+            {
+                question: "計畫去旅行，你最喜歡透過哪種方式做功課？",
+                options: [
+                    { text: "看IG美照或旅遊影片", type: "V" },
+                    { text: "跟去過的朋友聊天討論", type: "A" },
+                    { text: "閱讀旅遊部落格或旅遊書", type: "R" },
+                    { text: "不管那麼多，去了再體驗", type: "K" }
+                ]
+            },
+            {
+                question: "要學習一道新料理，你偏好？",
+                options: [
+                    { text: "看食譜上的完成圖和步驟照片", type: "V" },
+                    { text: "一邊聽老師解說一邊看示範", type: "A" },
+                    { text: "閱讀食譜書上的詳細文字步驟", type: "R" },
+                    { text: "直接進廚房動手做做看", type: "K" }
+                ]
+            },
+            {
+                question: "在考試前複習，你習慣？",
+                options: [
+                    { text: "畫圖表、心智圖來記憶", type: "V" },
+                    { text: "把重點唸出來，或是跟同學討論", type: "A" },
+                    { text: "反覆閱讀筆記和課本文字", type: "R" },
+                    { text: "把考古題寫幾遍，或透過實作練習", type: "K" }
+                ]
+            }
+        ];
+
+        // 學習風格結果說明
+        const resultTypes = {
+            "V": {
+                title: "視覺型 (Visual)",
+                desc: "👀 你是視覺動物！你喜歡透過圖片、圖表、影片和顏色來學習。對你來說，一張圖勝過千言萬語。建議使用螢光筆、心智圖來輔助記憶。"
+            },
+            "A": {
+                title: "聽覺型 (Aural)",
+                desc: "👂 你擁有一雙順風耳！你喜歡透過聆聽、討論和口述來學習。聽別人講解或自己唸出來會讓你記得更牢。建議多參與討論或使用有聲書。"
+            },
+            "R": {
+                title: "讀寫型 (Read/Write)",
+                desc: "📝 你是文字掌控者！你喜歡閱讀文字資訊、寫筆記和列表。對文字的敏感度高，閱讀教科書對你來說最有效率。建議多做筆記、將圖表轉化為文字。"
+            },
+            "K": {
+                title: "動覺型 (Kinesthetic)",
+                desc: "✋ 你是實踐家！你喜歡動手做、親身體驗和從錯誤中學習。坐著聽課對你來說很痛苦，直接操作最快上手。建議透過實驗、模擬情境或邊走動邊背誦來學習。"
+            }
+        };
+
+        let currentQuestion = 0;
+        let scores = { V: 0, A: 0, R: 0, K: 0 };
+        let audioContext = null;
+        let playPromise = undefined;
+
+        const bgMusic = document.getElementById('bgMusic');
+        const musicToggle = document.getElementById('musicToggle');
+        const musicIcon = document.getElementById('musicIcon');
+        const audioStatus = document.getElementById('audioStatus');
+
+        const quizContainer = document.getElementById('quizContainer');
+        const resultContainer = document.getElementById('resultContainer');
+        const questionText = document.getElementById('questionText');
+        const optionsContainer = document.getElementById('optionsContainer');
+        const qIndex = document.getElementById('qIndex');
+        const progressBar = document.getElementById('progressBar');
+        const headerArea = document.getElementById('headerArea');
+        const resultBurst = document.getElementById('resultBurst');
+
+        function startApp() {
+            document.getElementById('startOverlay').style.display = 'none';
+            quizContainer.classList.remove('hidden');
+
+            // Init Audio
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            audioContext = new AudioContext();
+
+            safePlayMusic();
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            const data = quizData[currentQuestion];
+            qIndex.textContent = currentQuestion + 1;
+            questionText.textContent = data.question;
+
+            // 更新進度條
+            const progress = ((currentQuestion) / quizData.length) * 100;
+            progressBar.style.width = `${progress}%`;
+
+            optionsContainer.innerHTML = '';
+
+            // 隨機排列選項，避免固定位置
+            const shuffledOptions = [...data.options].sort(() => Math.random() - 0.5);
+
+            shuffledOptions.forEach((opt, index) => {
+                const btn = document.createElement('div');
+                btn.className = 'option-btn comic-font';
+                // 加入一點隨機旋轉，增加漫畫感
+                const rotate = (Math.random() * 2 - 1).toFixed(1);
+                btn.style.transform = `rotate(${rotate}deg)`;
+
+                btn.innerHTML = `<span class="text-red-500 mr-2">${String.fromCharCode(65 + index)}.</span> ${opt.text}`;
+
+                btn.onclick = () => handleAnswer(opt.type);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function handleAnswer(type) {
+            playSwooshSound();
+            scores[type]++;
+
+            // 動畫過場
+            quizContainer.classList.add('fade-out');
+
+            setTimeout(() => {
+                currentQuestion++;
+                if (currentQuestion < quizData.length) {
+                    loadQuestion();
+                    quizContainer.classList.remove('fade-out');
+                    quizContainer.classList.add('fade-in');
+                    setTimeout(() => quizContainer.classList.remove('fade-in'), 300);
+                } else {
+                    showResult();
+                }
+            }, 300);
+        }
+
+        function showResult() {
+            quizContainer.style.display = 'none';
+            headerArea.style.display = 'none';
+
+            // 計算最高分
+            let maxScore = -1;
+            let winner = 'V'; // 預設
+
+            for (const [key, value] of Object.entries(scores)) {
+                if (value > maxScore) {
+                    maxScore = value;
+                    winner = key;
+                }
+            }
+
+            const resultData = resultTypes[winner];
+            document.getElementById('resultTitle').textContent = resultData.title.split(' ')[0]; // 只取中文標題
+            document.getElementById('resultDesc').textContent = resultData.desc;
+
+            // 顯示結果與特效
+            resultBurst.classList.add('show-burst');
+            resultContainer.classList.remove('hidden');
+            resultContainer.classList.add('fade-in');
+
+            // 播放勝利音效 (模擬)
+            playWinSound();
+        }
+
+        // --- 音訊邏輯 (沿用之前的穩定版本) ---
+
+        function safePlayMusic() {
+            bgMusic.volume = 0.4;
+            playPromise = bgMusic.play();
+            if (playPromise !== undefined) {
+                playPromise.then(() => updateMusicUI(true))
+                    .catch(e => { console.error(e); updateMusicUI(false); });
+            }
+        }
+
+        function safePauseMusic() {
+            if (playPromise !== undefined) {
+                playPromise.then(() => { bgMusic.pause(); updateMusicUI(false); })
+                    .catch(() => updateMusicUI(false));
+            }
+        }
+
+        function updateMusicUI(isPlaying) {
+            if (isPlaying) {
+                musicIcon.textContent = "⏸";
+                musicToggle.classList.add('rainbow-active');
+                audioStatus.textContent = "狀態: 播放中";
+                audioStatus.style.color = "#00FF00";
+            } else {
+                musicIcon.textContent = "🎵";
+                musicToggle.classList.remove('rainbow-active');
+                audioStatus.textContent = "狀態: 暫停";
+                audioStatus.style.color = "white";
+            }
+        }
+
+        musicToggle.addEventListener('click', () => {
+            if (bgMusic.paused) safePlayMusic();
+            else safePauseMusic();
+        });
+
+        function playSwooshSound() {
+            if (!audioContext) return;
+            if (audioContext.state === 'suspended') audioContext.resume();
+            const osc = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            osc.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            const now = audioContext.currentTime;
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(200, now);
+            osc.frequency.exponentialRampToValueAtTime(800, now + 0.1);
+            gainNode.gain.setValueAtTime(0.3, now);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+
+            osc.start(now);
+            osc.stop(now + 0.2);
+        }
+
+        function playWinSound() {
+            if (!audioContext) return;
+            const now = audioContext.currentTime;
+
+            // 簡單的三和弦勝利音效
+            [440, 554, 659].forEach((freq, i) => {
+                const osc = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                osc.connect(gain);
+                gain.connect(audioContext.destination);
+
+                osc.type = 'square';
+                osc.frequency.value = freq;
+
+                gain.gain.setValueAtTime(0, now);
+                gain.gain.linearRampToValueAtTime(0.2, now + 0.1 + (i * 0.05));
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 1.5);
+
+                osc.start(now);
+                osc.stop(now + 1.5);
+            });
+        }
+    </script>
+</body>
+
+</html>

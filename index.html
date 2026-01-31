@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MTC Online 師資班 - 詞彙教學互動課程</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .font-bangers {
+            font-family: 'Bangers', cursive;
+            letter-spacing: 2px;
+        }
+
+        .pop-shadow {
+            box-shadow: 8px 8px 0px 0px rgba(0, 0, 0, 1);
+        }
+
+        .pop-border {
+            border: 4px solid #000;
+        }
+
+        .lesson-card {
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .lesson-card:hover {
+            transform: translate(-4px, -4px);
+            box-shadow: 12px 12px 0px 0px rgba(0, 0, 0, 1);
+        }
+
+        .lesson-card:active {
+            transform: translate(2px, 2px);
+            box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
+        }
+
+        /* Pop art background pattern */
+        .pop-dots {
+            background-image: radial-gradient(rgba(0, 0, 0, 0.15) 2px, transparent 2px);
+            background-size: 20px 20px;
+        }
+
+        /* Animated gradient text */
+        @keyframes gradient-shift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .gradient-text {
+            background: linear-gradient(90deg, #FF0080, #FF8C00, #40E0D0, #FF0080);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradient-shift 3s linear infinite;
+        }
+
+        /* Badge pulse animation */
+        @keyframes pulse-badge {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .badge-pulse {
+            animation: pulse-badge 2s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body class="pop-dots">
+    
+    <!-- Main Container -->
+    <div class="min-h-screen py-8 px-4">
+        
+        <!-- Header Section -->
+        <header class="max-w-6xl mx-auto mb-12 text-center">
+            <!-- Main Title -->
+            <div class="inline-block bg-white pop-border pop-shadow px-8 py-6 transform -rotate-1 mb-6">
+                <h1 class="font-bangers text-4xl md:text-6xl text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-yellow-500 to-blue-500 mb-2">
+                    MTC ONLINE
+                </h1>
+                <h2 class="text-2xl md:text-3xl font-bold text-gray-800">
+                    第47期師資班 - 詞彙教學
+                </h2>
+            </div>
+
+            <!-- Subtitle -->
+            <div class="bg-yellow-400 pop-border inline-block px-6 py-3 transform rotate-1">
+                <p class="font-bold text-lg md:text-xl text-black">
+                    🎮 互動式教學體驗 • 6大核心單元
+                </p>
+            </div>
+        </header>
+
+        <!-- Lessons Grid -->
+        <main class="max-w-7xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                
+                <!-- Lesson 1: VARK Learning Style -->
+                <a href="pages/lesson1.html" class="lesson-card bg-white pop-border pop-shadow rounded-xl overflow-hidden group">
+                    <div class="bg-blue-400 p-4 border-b-4 border-black relative">
+                        <div class="absolute top-2 right-2 bg-red-500 text-white px-3 py-1 pop-border text-sm font-bold transform rotate-12 badge-pulse">
+                            測驗
+                        </div>
+                        <h3 class="font-bangers text-3xl text-white drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]">
+                            LESSON 01
+                        </h3>
+                    </div>
+                    <div class="p-6">
+                        <h4 class="text-2xl font-bold mb-3 text-gray-800">
+                            你的大腦喜歡怎麼學？
+                        </h4>
+                        <p class="text-gray-600 mb-4 leading-relaxed">
+                            透過VARK學習風格測試，了解學生的學習偏好：視覺型、聽覺型、讀寫型或動覺型。
+                        </p>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
+                                🎯 學習風格
+                            </span>
+                            <span class="text-2xl group-hover:translate-x-2 transition-transform">
+                                →
+                            </span>
+                        </div>
+                    </div>
+                </a>
+
+                <!-- Lesson 2: Idiom Card Game -->
+                <a href="pages/lesson2.html" class="lesson-card bg-white pop-border pop-shadow rounded-xl overflow-hidden group">
+                    <div class="bg-red-500 p-4 border-b-4 border-black relative">
+                        <div class="absolute top-2 right-2 bg-yellow-400 text-black px-3 py-1 pop-border text-sm font-bold transform rotate-12 badge-pulse">
+                            多人
+                        </div>
+                        <h3 class="font-bangers text-3xl text-white drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]">
+                            LESSON 02
+                        </h3>
+                    </div>
+                    <div class="p-6">
+                        <h4 class="text-2xl font-bold mb-3 text-gray-800">
+                            成語卡牌大亂鬥
+                        </h4>
+                        <p class="text-gray-600 mb-4 leading-relaxed">
+                            透過多人協作的卡牌遊戲，讓學生在競爭與合作中學習成語的運用與搭配。
+                        </p>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm font-bold text-red-600 bg-red-50 px-3 py-1 rounded-full">
+                                🎴 互動遊戲
+                            </span>
+                            <span class="text-2xl group-hover:translate-x-2 transition-transform">
+                                →
+                            </span>
+                        </div>
+                    </div>
+                </a>
+
+                <!-- Lesson 3: Flashcards -->
+                <a href="pages/lesson3.html" class="lesson-card bg-white pop-border pop-shadow rounded-xl overflow-hidden group">
+                    <div class="bg-yellow-400 p-4 border-b-4 border-black relative">
+                        <div class="absolute top-2 right-2 bg-purple-500 text-white px-3 py-1 pop-border text-sm font-bold transform rotate-12 badge-pulse">
+                            練習
+                        </div>
+                        <h3 class="font-bangers text-3xl text-white drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]">
+                            LESSON 03
+                        </h3>
+                    </div>
+                    <div class="p-6">
+                        <h4 class="text-2xl font-bold mb-3 text-gray-800">
+                            初級詞彙教學小結
+                        </h4>
+                        <p class="text-gray-600 mb-4 leading-relaxed">
+                            使用普普風格的互動式閃卡，複習初級詞彙教學的核心概念與實務技巧。
+                        </p>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm font-bold text-yellow-700 bg-yellow-50 px-3 py-1 rounded-full">
+                                📚 複習卡
+                            </span>
+                            <span class="text-2xl group-hover:translate-x-2 transition-transform">
+                                →
+                            </span>
+                        </div>
+                    </div>
+                </a>
+
+                <!-- Lesson 4: Group Classification -->
+                <a href="pages/lesson4.html" class="lesson-card bg-white pop-border pop-shadow rounded-xl overflow-hidden group">
+                    <div class="bg-teal-400 p-4 border-b-4 border-black relative">
+                        <div class="absolute top-2 right-2 bg-orange-500 text-white px-3 py-1 pop-border text-sm font-bold transform rotate-12 badge-pulse">
+                            協作
+                        </div>
+                        <h3 class="font-bangers text-3xl text-white drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]">
+                            LESSON 04
+                        </h3>
+                    </div>
+                    <div class="p-6">
+                        <h4 class="text-2xl font-bold mb-3 text-gray-800">
+                            各級學習需求與表現
+                        </h4>
+                        <p class="text-gray-600 mb-4 leading-relaxed">
+                            分組協作遊戲，將詞彙學習特徵分類到初級、中級、高級三個層次。
+                        </p>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm font-bold text-teal-700 bg-teal-50 px-3 py-1 rounded-full">
+                                🎯 分類遊戲
+                            </span>
+                            <span class="text-2xl group-hover:translate-x-2 transition-transform">
+                                →
+                            </span>
+                        </div>
+                    </div>
+                </a>
+
+                <!-- Lesson 5: Synonym Challenge -->
+                <a href="pages/lesson5.html" class="lesson-card bg-white pop-border pop-shadow rounded-xl overflow-hidden group">
+                    <div class="bg-pink-500 p-4 border-b-4 border-black relative">
+                        <div class="absolute top-2 right-2 bg-green-400 text-black px-3 py-1 pop-border text-sm font-bold transform rotate-12 badge-pulse">
+                            挑戰
+                        </div>
+                        <h3 class="font-bangers text-3xl text-white drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]">
+                            LESSON 05
+                        </h3>
+                    </div>
+                    <div class="p-6">
+                        <h4 class="text-2xl font-bold mb-3 text-gray-800">
+                            近義詞波普大作戰
+                        </h4>
+                        <p class="text-gray-600 mb-4 leading-relaxed">
+                            挑戰近義詞的細微差異，掌握輕重程度、褒貶色彩、用法搭配等關鍵辨析點。
+                        </p>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm font-bold text-pink-700 bg-pink-50 px-3 py-1 rounded-full">
+                                💡 辨析訓練
+                            </span>
+                            <span class="text-2xl group-hover:translate-x-2 transition-transform">
+                                →
+                            </span>
+                        </div>
+                    </div>
+                </a>
+
+                <!-- Lesson 6: Final Quiz -->
+                <a href="pages/lesson6.html" class="lesson-card bg-white pop-border pop-shadow rounded-xl overflow-hidden group">
+                    <div class="bg-green-500 p-4 border-b-4 border-black relative">
+                        <div class="absolute top-2 right-2 bg-blue-500 text-white px-3 py-1 pop-border text-sm font-bold transform rotate-12 badge-pulse">
+                            總結
+                        </div>
+                        <h3 class="font-bangers text-3xl text-white drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]">
+                            LESSON 06
+                        </h3>
+                    </div>
+                    <div class="p-6">
+                        <h4 class="text-2xl font-bold mb-3 text-gray-800">
+                            詞彙教學策略總測驗
+                        </h4>
+                        <p class="text-gray-600 mb-4 leading-relaxed">
+                            Matrix風格的終極測驗，檢驗你對詞彙教學策略的完整理解與掌握。
+                        </p>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm font-bold text-green-700 bg-green-50 px-3 py-1 rounded-full">
+                                🏆 終極測驗
+                            </span>
+                            <span class="text-2xl group-hover:translate-x-2 transition-transform">
+                                →
+                            </span>
+                        </div>
+                    </div>
+                </a>
+
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="max-w-6xl mx-auto mt-16 text-center">
+            <div class="bg-black/20 backdrop-blur-sm pop-border inline-block px-8 py-4 rounded-xl">
+                <p class="text-white font-bold text-sm md:text-base">
+                    📖 MTC Online 第47期師資班 | 詞彙教學講義互動版
+                </p>
+                <p class="text-white/80 text-xs mt-2">
+                    © 2026 | 設計理念：結合普普藝術風格與現代教學科技
+                </p>
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- Decorative Elements -->
+    <div class="fixed top-10 left-10 w-20 h-20 bg-yellow-400 rounded-full pop-border opacity-50 animate-bounce hidden lg:block" style="animation-delay: 0.5s;"></div>
+    <div class="fixed bottom-20 right-20 w-16 h-16 bg-pink-500 pop-border transform rotate-45 opacity-50 animate-pulse hidden lg:block"></div>
+    <div class="fixed top-1/2 right-10 w-12 h-12 bg-blue-400 pop-border opacity-50 animate-spin hidden lg:block" style="animation-duration: 8s;"></div>
+
+</body>
+</html>

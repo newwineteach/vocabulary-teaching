@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>漢語詞彙教學策略 - 互動測驗</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&family=Share+Tech+Mono&display=swap');
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            overflow: hidden;
+            background-color: black;
+            color: #dcfce7;
+        }
+
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 0;
+            opacity: 0.8;
+        }
+
+        .glass-panel {
+            background: rgba(0, 20, 0, 0.7);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(74, 222, 128, 0.3);
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.1);
+        }
+
+        .neon-text {
+            text-shadow: 0 0 5px #4ade80, 0 0 10px #4ade80, 0 0 20px #22c55e;
+        }
+
+        .custom-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .custom-scroll::-webkit-scrollbar-track {
+            background: #001100;
+        }
+
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #15803d;
+            border-radius: 3px;
+        }
+
+        /* Back button */
+        .back-button {
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 100;
+            background: rgba(74, 222, 128, 0.2);
+            border: 2px solid #4ade80;
+            padding: 0.5rem 1rem;
+            font-weight: bold;
+            box-shadow: 0 0 10px rgba(74, 222, 128, 0.3);
+            transition: all 0.2s;
+            color: #4ade80;
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        .back-button:hover {
+            background: rgba(74, 222, 128, 0.4);
+            box-shadow: 0 0 20px rgba(74, 222, 128, 0.5);
+        }
+    </style>
+</head>
+
+<body class="h-screen w-full flex items-center justify-center relative">
+
+    <!-- Background Canvas -->
+    <canvas id="matrix"></canvas>
+
+    <!-- 返回主頁按鈕 -->
+    <a href="../index.html" class="back-button">
+        <span class="text-xl">←</span>
+        <span class="hidden md:inline ml-2">BACK</span>
+    </a>
+
+    <!-- Main Container -->
+    <div class="relative z-10 w-full max-w-4xl p-4 flex flex-col md:flex-row gap-6 h-[90vh] md:h-auto">
+
+        <!-- Left Panel: Quiz Area -->
+        <main
+            class="flex-1 glass-panel rounded-2xl p-6 md:p-8 flex flex-col justify-center min-h-[500px] relative overflow-hidden">
+
+            <!-- Start Screen -->
+            <div id="start-screen" class="text-center space-y-8 animate__animated animate__fadeIn">
+                <div class="mb-8">
+                    <h1 class="text-4xl md:text-5xl font-bold mb-2 neon-text font-mono tracking-wider">
+                        VOCABULARY<br>STRATEGY</h1>
+                    <p class="text-green-400 tracking-[0.5em] text-sm md:text-base">SYSTEM_READY</p>
+                </div>
+
+                <div class="max-w-xs mx-auto space-y-4">
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                            </svg>
+                        </div>
+                        <input type="text" id="playerName" placeholder="輸入您的代號 (Agent Name)"
+                            class="w-full pl-10 pr-4 py-3 bg-black/50 border border-green-700 rounded text-green-300 placeholder-green-800 focus:outline-none focus:border-green-400 focus:ring-1 focus:ring-green-400 font-mono text-center">
+                    </div>
+
+                    <button onclick="startGame()"
+                        class="w-full bg-green-700 hover:bg-green-600 text-white font-bold py-3 px-6 rounded shadow-[0_0_15px_rgba(21,128,61,0.5)] transition-all hover:shadow-[0_0_25px_rgba(34,197,94,0.6)] hover:-translate-y-1 font-mono tracking-widest">
+                        ENTER_MATRIX
+                    </button>
+                </div>
+
+                <div class="text-xs text-green-800 font-mono mt-8">
+                    v2.0.26 // UPLOADED: Vocabulary_Strategy_Essentials
+                </div>
+            </div>
+
+            <!-- Quiz Screen -->
+            <div id="quiz-screen" class="hidden h-full flex flex-col">
+                <!-- Progress Bar -->
+                <div class="w-full bg-green-900/30 h-1 rounded mb-6 overflow-hidden">
+                    <div id="progress-bar"
+                        class="bg-green-500 h-full w-0 transition-all duration-500 shadow-[0_0_10px_#22c55e]"></div>
+                </div>
+
+                <!-- Question Area -->
+                <div id="question-container" class="flex-1 flex flex-col justify-center">
+                    <!-- Dynamic Content -->
+                </div>
+            </div>
+
+            <!-- Result Screen -->
+            <div id="result-screen" class="hidden text-center space-y-6 animate__animated animate__zoomIn">
+                <h2 class="text-3xl font-bold text-green-300 mb-2">MISSION COMPLETE</h2>
+                <div
+                    class="inline-block p-8 rounded-full border-4 border-green-500 bg-black/50 shadow-[0_0_30px_rgba(34,197,94,0.4)] mb-4">
+                    <span class="block text-sm text-green-600 mb-1">FINAL SCORE</span>
+                    <span id="final-score" class="text-6xl font-bold text-white neon-text">0</span>
+                </div>
+                <p class="text-green-200" id="result-message">教學策略數據已完成分析。</p>
+                <button onclick="restartGame()"
+                    class="bg-transparent border-2 border-green-600 text-green-400 hover:bg-green-900 hover:text-white font-bold py-2 px-6 rounded transition-colors font-mono">
+                    RESTART_SYSTEM
+                </button>
+            </div>
+
+        </main>
+
+        <!-- Right Panel: Leaderboard -->
+        <aside
+            class="w-full md:w-64 glass-panel rounded-2xl p-4 flex flex-col max-h-[40vh] md:max-h-none overflow-hidden">
+            <h3 class="text-lg font-bold text-green-400 mb-4 border-b border-green-800 pb-2 flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
+                    </path>
+                </svg>
+                LEADERBOARD
+            </h3>
+            <div id="leaderboard-list" class="flex-1 overflow-y-auto custom-scroll">
+                <div class="text-green-800 text-sm text-center py-4">
+                    本地模式 - 無需連線
+                </div>
+            </div>
+        </aside>
+
+    </div>
+
+    <!-- Lightbox Modal -->
+    <div id="lightbox"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm hidden animate__animated animate__fadeIn">
+        <div id="lightbox-content" class="relative">
+            <!-- Content Injected via JS -->
+        </div>
+    </div>
+
+    <script>
+        // Quiz Data
+        const questions = [
+            {
+                question: "語言聽、說、讀、寫的核心是什麼？",
+                options: ["語法", "詞彙", "發音", "文化"],
+                answer: 1,
+                explanation: "詞彙是語言的基本單位，是聽說讀寫的基礎。"
+            },
+            {
+                question: "一個完整的詞彙教學流程包含哪四個階段？",
+                options: ["準備、講解、背誦、考試", "導入、呈現、練習、運用", "暖身、朗讀、抄寫、默寫", "聆聽、跟讀、對話、寫作"],
+                answer: 1,
+                explanation: "標準流程：導入(引發興趣) → 呈現(引導練習) → 練習(自主活動) → 運用(活用純熟)。"
+            },
+            {
+                question: "除了理解和記憶生詞的意思，教學重點還應包含什麼？",
+                options: ["字形結構", "歷史演變", "用法及搭配", "翻譯能力"],
+                answer: 2,
+                explanation: "教學重點不僅在於理解意思，更在於掌握詞彙的「用法及搭配」。"
+            },
+            {
+                question: "為了提升學習動機，在「導入」階段應採用什麼策略？",
+                options: ["多元互動策略", "機械式重複", "字典查閱", "文法分析"],
+                answer: 0,
+                explanation: "應使用圖片、聲音、影像、角色扮演等多元互動策略來引發興趣。"
+            },
+            {
+                question: "初級與中級詞彙最大的差異在於從「具體」轉向什麼？",
+                options: ["簡單", "抽象", "口語", "生活化"],
+                answer: 1,
+                explanation: "初級詞彙多為具體、高頻；中級詞彙則具有抽象、正式、豐富及文化含義。"
+            },
+            {
+                question: "到了中級，學生最常遇到的詞彙學習困難包含哪些？",
+                options: ["發音混淆", "無法靈活運用", "抽象概念理解困難", "以上皆是"],
+                answer: 3,
+                explanation: "中級常見困難包含：詞彙量不足、發音混淆、無法靈活運用及抽象概念理解困難。"
+            },
+            {
+                question: "如何幫助學生克服「遺忘率高」的問題？",
+                options: ["罰抄寫", "延長上課時間", "詞彙重現、溫故知新", "只教簡單的詞"],
+                answer: 2,
+                explanation: "透過系統化的複習與詞彙重現 (Recurrence)，幫助學生鞏固記憶。"
+            },
+            {
+                question: "培養學生「分析詞語能力」的關鍵教學法是什麼？",
+                options: ["翻譯教學法", "直接教學法", "語素教學", "聽說教學法"],
+                answer: 2,
+                explanation: "語素教學 (Morpheme teaching) 重視構詞法，讓學生能舉一反三 (如：新詞 = 單字 + 單字)。"
+            },
+            {
+                question: "看到「綠茶、白雪、地震」這些詞，我們主要是在練習什麼概念？",
+                options: ["聲調變化", "構詞法 (Word Formation)", "句型結構", "修辭技巧"],
+                answer: 1,
+                explanation: "這些例子展示了詞語的組合方式，如形容詞+名詞、主語+謂語，屬於構詞法練習。"
+            },
+            {
+                question: "設計課堂遊戲與練習時，最重要的原則是什麼？",
+                options: ["遊戲時間越長越好", "規則越複雜越好", "具有清楚的教學目的", "必須使用電子設備"],
+                answer: 2,
+                explanation: "無論形式如何多元，核心原則必須是「具有清楚的教學目的」。"
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let userName = "";
+        let leaderboard = [];
+
+        // --- Matrix Rain Effect ---
+        function initMatrix() {
+            const canvas = document.getElementById('matrix');
+            const ctx = canvas.getContext('2d');
+
+            let width = canvas.width = window.innerWidth;
+            let height = canvas.height = window.innerHeight;
+
+            const cols = Math.floor(width / 20);
+            const ypos = Array(cols).fill(0);
+
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, width, height);
+
+            function matrix() {
+                ctx.fillStyle = '#0001';
+                ctx.fillRect(0, 0, width, height);
+
+                ctx.fillStyle = '#0f0';
+                ctx.font = '15pt monospace';
+
+                ypos.forEach((y, ind) => {
+                    const text = String.fromCharCode(Math.random() * 128);
+                    const x = ind * 20;
+                    ctx.fillText(text, x, y);
+                    if (y > 100 + Math.random() * 10000) ypos[ind] = 0;
+                    else ypos[ind] = y + 20;
+                });
+            }
+
+            window.addEventListener('resize', () => {
+                width = canvas.width = window.innerWidth;
+                height = canvas.height = window.innerHeight;
+            });
+
+            setInterval(matrix, 50);
+        }
+
+        // --- Game Logic ---
+
+        function startGame() {
+            const nameInput = document.getElementById('playerName');
+            if (!nameInput.value.trim()) {
+                alert("請輸入您的名字！");
+                return;
+            }
+            userName = nameInput.value.trim();
+            score = 0;
+            currentQuestionIndex = 0;
+
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            const q = questions[currentQuestionIndex];
+            const container = document.getElementById('question-container');
+
+            const progress = ((currentQuestionIndex) / questions.length) * 100;
+            document.getElementById('progress-bar').style.width = `${progress}%`;
+
+            container.innerHTML = `
+                <div class="animate__animated animate__fadeIn">
+                    <h2 class="text-2xl md:text-3xl font-bold text-green-400 mb-6 drop-shadow-[0_0_10px_rgba(74,222,128,0.8)]">
+                        Q${currentQuestionIndex + 1}: ${q.question}
+                    </h2>
+                    <div class="grid grid-cols-1 gap-4">
+                        ${q.options.map((opt, idx) => `
+                            <button onclick="checkAnswer(${idx})" 
+                                class="p-4 text-left border-2 border-green-800 bg-black/60 hover:bg-green-900/50 hover:border-green-500 text-green-100 rounded-lg transition-all duration-300 group transform hover:scale-[1.02]">
+                                <span class="inline-block w-8 h-8 rounded-full border border-green-600 text-center leading-7 mr-3 group-hover:bg-green-500 group-hover:text-black font-bold transition-colors">
+                                    ${String.fromCharCode(65 + idx)}
+                                </span>
+                                ${opt}
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function checkAnswer(selectedIndex) {
+            const q = questions[currentQuestionIndex];
+            const isCorrect = selectedIndex === q.answer;
+
+            if (isCorrect) {
+                score += 10;
+            }
+
+            showFeedback(isCorrect, q.explanation);
+        }
+
+        function showFeedback(isCorrect, explanation) {
+            const lightbox = document.getElementById('lightbox');
+            const lightboxContent = document.getElementById('lightbox-content');
+
+            lightbox.classList.remove('hidden');
+            lightboxContent.className = `max-w-md w-full p-8 rounded-2xl text-center transform transition-all scale-100 border-4 ${isCorrect ? 'bg-green-900/90 border-green-400 shadow-[0_0_50px_rgba(74,222,128,0.5)]' : 'bg-red-900/90 border-red-400 shadow-[0_0_50px_rgba(248,113,113,0.5)]'}`;
+
+            lightboxContent.innerHTML = `
+                <div class="text-6xl mb-4 animate__animated animate__bounceIn">
+                    ${isCorrect ? '🎉' : '🥀'}
+                </div>
+                <h3 class="text-3xl font-bold mb-2 ${isCorrect ? 'text-green-300' : 'text-red-300'}">
+                    ${isCorrect ? '回答正確！' : '回答錯誤...'}
+                </h3>
+                <p class="text-white text-lg mb-6 leading-relaxed border-t border-white/20 pt-4 mt-4">
+                    ${explanation}
+                </p>
+                <button onclick="nextQuestion()" class="px-8 py-3 rounded-full font-bold text-lg transition-transform hover:scale-105 ${isCorrect ? 'bg-green-500 text-black hover:bg-green-400' : 'bg-red-500 text-white hover:bg-red-400'}">
+                    ${currentQuestionIndex < questions.length - 1 ? '下一題 ➔' : '查看結果 ➔'}
+                </button>
+            `;
+        }
+
+        function nextQuestion() {
+            document.getElementById('lightbox').classList.add('hidden');
+            currentQuestionIndex++;
+
+            if (currentQuestionIndex < questions.length) {
+                renderQuestion();
+            } else {
+                endGame();
+            }
+        }
+
+        function endGame() {
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+
+            const finalScoreEl = document.getElementById('final-score');
+            finalScoreEl.innerText = score;
+
+            // Update message
+            const messageEl = document.getElementById('result-message');
+            const maxScore = questions.length * 10;
+            if (score === maxScore) {
+                messageEl.textContent = "完美！你完全掌握了詞彙教學策略！🏆";
+            } else if (score >= maxScore * 0.7) {
+                messageEl.textContent = "做得很好！你對詞彙教學有深入的理解。👍";
+            } else {
+                messageEl.textContent = "繼續加油！多複習講義內容會更好。💪";
+            }
+
+            // Save to local leaderboard
+            leaderboard.push({ name: userName, score: score, time: new Date().toLocaleString() });
+            leaderboard.sort((a, b) => b.score - a.score);
+            leaderboard = leaderboard.slice(0, 10);
+            updateLeaderboard();
+        }
+
+        function restartGame() {
+            document.getElementById('result-screen').classList.add('hidden');
+            document.getElementById('start-screen').classList.remove('hidden');
+            document.getElementById('playerName').value = '';
+        }
+
+        function updateLeaderboard() {
+            const list = document.getElementById('leaderboard-list');
+            if (leaderboard.length === 0) {
+                list.innerHTML = '<div class="text-green-800 text-sm text-center py-4">本地模式 - 無需連線</div>';
+                return;
+            }
+
+            list.innerHTML = '';
+            leaderboard.forEach((entry, index) => {
+                const isMe = entry.name === userName && entry.score === score;
+                list.innerHTML += `
+                    <div class="flex justify-between items-center p-3 mb-2 rounded border border-green-900/50 ${index === 0 ? 'bg-yellow-900/30 text-yellow-300' : 'bg-black/40 text-green-400'}">
+                        <div class="flex items-center gap-3">
+                            <span class="font-mono font-bold w-6">${index + 1}.</span>
+                            <span class="truncate max-w-[120px] ${isMe ? 'text-white font-bold' : ''}">${entry.name}</span>
+                        </div>
+                        <span class="font-bold font-mono text-xl">${entry.score}</span>
+                    </div>
+                `;
+            });
+        }
+
+        // Start Matrix on Load
+        window.addEventListener('load', initMatrix);
+
+    </script>
+
+</body>
+
+</html>

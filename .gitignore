@@ -1,0 +1,26 @@
+# 臨時文件
+*.tmp
+*.log
+*~
+
+# 系統文件
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 編輯器文件
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 原始txt文件（可選，如果不想上傳原始文件）
+# *.txt
+
+# Node modules (如果將來需要)
+node_modules/
+package-lock.json
+
+# 其他
+.env
+*.bak

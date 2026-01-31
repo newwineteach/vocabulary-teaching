@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>成語卡牌大亂鬥</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore-compat.js"></script>
+
+    <style>
+        body {
+            overscroll-behavior: none;
+            /* Prevent pull-to-refresh on mobile */
+            touch-action: none;
+            /* Disable default touch actions for game feel */
+            background-color: #f0f4f8;
+            font-family: "Noto Sans TC", sans-serif;
+        }
+
+        .card-shadow {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            /* Smooth transition for expand/collapse */
+        }
+
+        .card-dragging {
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            transform: scale(1.05);
+            z-index: 100 !important;
+            transition: none;
+            /* No transition while dragging for responsiveness */
+        }
+
+        .drop-zone {
+            background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' rx='20' ry='20' stroke='%23CBD5E1FF' stroke-width='4' stroke-dasharray='12%2c 12' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
+        }
+
+        /* Back button styles */
+        .back-button {
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 100;
+            background: white;
+            border: 3px solid black;
+            padding: 0.5rem 1rem;
+            font-weight: bold;
+            box-shadow: 4px 4px 0 0 black;
+            transition: all 0.2s;
+        }
+
+        .back-button:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0 0 black;
+        }
+
+        .back-button:active {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0 0 black;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 返回主頁按鈕 -->
+    <a href="../index.html" class="back-button">
+        <span class="text-xl">←</span>
+        <span class="hidden md:inline ml-2">返回主頁</span>
+    </a>
+
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // --- Configuration ---
+        const { useState, useEffect, useRef, useMemo } = React;
+
+        // Firebase Configuration (Environment Variables)
+        const firebaseConfig = JSON.parse(window.__firebase_config || '{}');
+        const appId = window.__app_id || 'default-app';
+
+        // Initialize Firebase
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // Game Constants
+        const TEAMS = [
+            { id: 'red', name: '紅隊', color: 'bg-red-100', border: 'border-red-500', text: 'text-red-700', isRight: false, isBottom: false },
+            { id: 'blue', name: '藍隊', color: 'bg-blue-100', border: 'border-blue-500', text: 'text-blue-700', isRight: true, isBottom: false },
+            { id: 'green', name: '綠隊', color: 'bg-green-100', border: 'border-green-500', text: 'text-green-700', isRight: false, isBottom: true },
+            { id: 'yellow', name: '黃隊', color: 'bg-yellow-100', border: 'border-yellow-500', text: 'text-yellow-700', isRight: true, isBottom: true }
+        ];
+
+        // Default Idioms
+        const IDIOMS = [
+            "一馬當先",
+            "勢如破竹",
+            "捷足先登",
+            "旗開得勝"
+        ];
+
+        const COLLECTION_NAME = 'game_cards';
+
+        // Helper to calculate positions based on layout mode
+        const getCardTargetPosition = (team, index, isExpanded) => {
+            const baseX = team.isRight ? 85 : 5;
+            const baseY = team.isBottom ? 80 : 5;
+            const xDir = team.isRight ? -1 : 1;
+            const yDir = team.isBottom ? -1 : 1;
+
+            if (isExpanded) {
+                // Expanded: 2x2 Grid (or similar readable layout)
+                // Use larger offsets to separate cards
+                const col = index % 2;
+                const row = Math.floor(index / 2);
+
+                // Percentages for spacing
+                const xSpacing = 12;
+                const ySpacing = 16;
+
+                return {
+                    x: baseX + (col * xSpacing * xDir),
+                    y: baseY + (row * ySpacing * yDir)
+                };
+            } else {
+                // Collapsed: Tight Stack/Fan
+                const xSpacing = 2;
+                const ySpacing = 2;
+
+                return {
+                    x: baseX + (index * xSpacing * xDir),
+                    y: baseY + (index * ySpacing * yDir)
+                };
+            }
+        };
+
+        function App() {
+            const [user, setUser] = useState(null);
+            const [cards, setCards] = useState([]);
+            const [draggingId, setDraggingId] = useState(null);
+            const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+            const [isExpanded, setIsExpanded] = useState(false); // Local UI state for toggle button text
+            const [status, setStatus] = useState("連線中...");
+
+            // --- Authentication ---
+            useEffect(() => {
+                const initAuth = async () => {
+                    try {
+                        if (window.__initial_auth_token) {
+                            await auth.signInWithCustomToken(window.__initial_auth_token);
+                        } else {
+                            await auth.signInAnonymously();
+                        }
+                    } catch (error) {
+                        console.error("Auth error:", error);
+                        setStatus("連線錯誤");
+                    }
+                };
+                initAuth();
+                return auth.onAuthStateChanged((u) => {
+                    setUser(u);
+                    if (u) setStatus("準備就緒");
+                });
+            }, []);
+
+            // --- Firestore Sync ---
+            useEffect(() => {
+                if (!user) return;
+
+                // Listen to public game data
+                const q = db.collection('artifacts').doc(appId).collection('public').doc('data').collection(COLLECTION_NAME);
+
+                const unsubscribe = q.onSnapshot((snapshot) => {
+                    const loadedCards = [];
+                    snapshot.forEach(doc => {
+                        loadedCards.push({ id: doc.id, ...doc.data() });
+                    });
+                    setCards(loadedCards);
+                }, (error) => {
+                    console.error("Data sync error:", error);
+                });
+
+                return () => unsubscribe();
+            }, [user]);
+
+            // --- Game Actions ---
+
+            const initializeGame = async () => {
+                if (!user) return;
+
+                const batch = db.batch();
+                const collectionRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection(COLLECTION_NAME);
+
+                // 1. Delete existing
+                cards.forEach(card => {
+                    batch.delete(collectionRef.doc(card.id));
+                });
+
+                // 2. Create new cards
+                // Default to Collapsed (Stacked) initially, or Expanded if preferred. 
+                // Let's default to Expanded so they are visible for the race!
+                const initialExpandedState = true;
+                setIsExpanded(initialExpandedState);
+
+                TEAMS.forEach((team) => {
+                    IDIOMS.forEach((idiom, index) => {
+                        const docRef = collectionRef.doc();
+                        const pos = getCardTargetPosition(team, index, initialExpandedState);
+
+                        batch.set(docRef, {
+                            text: idiom,
+                            teamId: team.id,
+                            x: pos.x,
+                            y: pos.y,
+                            originalIndex: index, // Keep track for layout calculations
+                            zIndex: index,
+                            isDragging: false,
+                            inZone: false,
+                            lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                    });
+                });
+
+                await batch.commit();
+            };
+
+            const toggleLayout = async () => {
+                if (!user) return;
+                const newExpandedState = !isExpanded;
+                setIsExpanded(newExpandedState);
+
+                const batch = db.batch();
+                const collectionRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection(COLLECTION_NAME);
+
+                // Update all cards that are NOT in the drop zone
+                cards.forEach(card => {
+                    if (!card.inZone && !card.isDragging) {
+                        const team = TEAMS.find(t => t.id === card.teamId);
+                        if (team) {
+                            const pos = getCardTargetPosition(team, card.originalIndex, newExpandedState);
+                            batch.update(collectionRef.doc(card.id), {
+                                x: pos.x,
+                                y: pos.y
+                            });
+                        }
+                    }
+                });
+                await batch.commit();
+            };
+
+            const updateCardPosition = async (id, x, y, isDragging) => {
+                const isInZone = (x > 30 && x < 70 && y > 30 && y < 70);
+
+                await db.collection('artifacts').doc(appId).collection('public').doc('data').collection(COLLECTION_NAME).doc(id).update({
+                    x,
+                    y,
+                    isDragging,
+                    zIndex: isDragging ? 100 : (isInZone ? 50 : 1),
+                    inZone: isInZone
+                });
+            };
+
+            // --- Interaction Handlers ---
+            const handlePointerDown = (e, card) => {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const screenW = window.innerWidth;
+                const screenH = window.innerHeight;
+                const mouseX = (e.clientX / screenW) * 100;
+                const mouseY = (e.clientY / screenH) * 100;
+
+                setDragOffset({
+                    x: mouseX - card.x,
+                    y: mouseY - card.y
+                });
+
+                setDraggingId(card.id);
+                updateCardPosition(card.id, card.x, card.y, true);
+            };
+
+            const handlePointerMove = (e) => {
+                if (!draggingId) return;
+                e.preventDefault();
+
+                const screenW = window.innerWidth;
+                const screenH = window.innerHeight;
+                let newX = ((e.clientX / screenW) * 100) - dragOffset.x;
+                let newY = ((e.clientY / screenH) * 100) - dragOffset.y;
+
+                // Boundaries
+                newX = Math.max(-5, Math.min(newX, 90));
+                newY = Math.max(-5, Math.min(newY, 95));
+
+                setCards(prev => prev.map(c =>
+                    c.id === draggingId ? { ...c, x: newX, y: newY, isDragging: true } : c
+                ));
+            };
+
+            const handlePointerUp = async (e) => {
+                if (!draggingId) return;
+                const card = cards.find(c => c.id === draggingId);
+                if (card) {
+                    await updateCardPosition(card.id, card.x, card.y, false);
+                }
+                setDraggingId(null);
+            };
+
+            useEffect(() => {
+                window.addEventListener('pointermove', handlePointerMove);
+                window.addEventListener('pointerup', handlePointerUp);
+                return () => {
+                    window.removeEventListener('pointermove', handlePointerMove);
+                    window.removeEventListener('pointerup', handlePointerUp);
+                };
+            }, [draggingId, cards]);
+
+
+            return (
+                <div className="relative w-full h-screen overflow-hidden select-none bg-slate-50">
+
+                    {/* Background Structure */}
+                    <div className="absolute inset-0 pointer-events-none">
+                        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2/3 h-1/3 drop-zone rounded-3xl flex items-center justify-center opacity-30">
+                            <span className="text-4xl font-bold text-slate-400">出卡區</span>
+                        </div>
+
+                        {TEAMS.map(team => (
+                            <div key={team.id}
+                                className={`absolute w-40 h-40 rounded-full opacity-20 ${team.color} blur-xl`}
+                                style={{
+                                    top: team.isBottom ? 'auto' : '-3rem',
+                                    bottom: team.isBottom ? '-3rem' : 'auto',
+                                    left: team.isRight ? 'auto' : '-3rem',
+                                    right: team.isRight ? '-3rem' : 'auto'
+                                }}
+                            />
+                        ))}
+                    </div>
+
+                    {/* Controls */}
+                    <div className="absolute top-0 left-0 right-0 p-4 z-50 flex flex-wrap justify-between items-start pointer-events-none gap-2" style={{ marginLeft: '80px' }}>
+                        <div className="bg-white/80 backdrop-blur px-4 py-2 rounded-full shadow-sm pointer-events-auto">
+                            <h1 className="font-bold text-slate-700">成語搶答</h1>
+                        </div>
+
+                        <div className="flex gap-2 pointer-events-auto">
+                            <button
+                                onClick={toggleLayout}
+                                className="bg-white hover:bg-gray-50 text-indigo-600 border border-indigo-200 px-4 py-2 rounded-full shadow-sm transition active:scale-95 text-sm font-bold"
+                            >
+                                {isExpanded ? '收起卡片' : '全部展開'}
+                            </button>
+
+                            <button
+                                onClick={initializeGame}
+                                className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-full shadow-lg transition active:scale-95 flex items-center gap-2 text-sm font-bold"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74-2.74L3 12" /></svg>
+                                重新發牌
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Cards Layer */}
+                    {cards.map((card) => {
+                        const team = TEAMS.find(t => t.id === card.teamId);
+                        const isMine = draggingId === card.id;
+
+                        return (
+                            <div
+                                key={card.id}
+                                onPointerDown={(e) => handlePointerDown(e, card)}
+                                className={`
+                                    absolute flex flex-col items-center justify-center
+                                    w-[120px] h-[160px] md:w-[130px] md:h-[180px]
+                                    rounded-xl bg-white border-2 
+                                    cursor-grab active:cursor-grabbing
+                                    ${team ? team.border : 'border-gray-200'}
+                                    ${isMine ? 'card-dragging' : 'card-shadow'}
+                                    ${card.inZone ? 'ring-4 ring-indigo-400 scale-110' : ''}
+                                `}
+                                style={{
+                                    top: `${card.y}%`,
+                                    left: `${card.x}%`,
+                                    zIndex: card.zIndex,
+                                    touchAction: 'none'
+                                }}
+                            >
+                                <div className={`w-full h-4 ${team ? team.color : 'bg-gray-100'} rounded-t-lg mb-auto`}></div>
+
+                                <div className="flex-1 flex items-center justify-center p-2 text-center pointer-events-none">
+                                    <span className="text-2xl font-bold text-gray-800 vertical-rl writing-mode-vertical">
+                                        {card.text}
+                                    </span>
+                                </div>
+
+                                <div className={`text-xs font-bold mb-2 pointer-events-none ${team ? team.text : 'text-gray-500'}`}>
+                                    {team ? team.name : ''}
+                                </div>
+                            </div>
+                        );
+                    })}
+
+                    {/* Empty State */}
+                    {cards.length === 0 && (
+                        <div className="absolute inset-0 flex items-center justify-center z-40 bg-white/50 backdrop-blur-sm pointer-events-auto">
+                            <button
+                                onClick={initializeGame}
+                                className="bg-indigo-600 text-white px-8 py-3 rounded-xl shadow-xl text-xl font-bold animate-bounce"
+                            >
+                                開始發牌
+                            </button>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+
+</html>
